@@ -7,8 +7,15 @@ $bSuccessUpload = is_uploaded_file($_FILES['Filedata']['tmp_name']);
 if (bSuccessUpload) { //성공 시 파일 사이즈와 URL 전송
 
 	$tmp_name = $_FILES['Filedata']['tmp_name'];
-	$name = $_FILES['Filedata']['name'];
-	$new_path = "../upload/".urlencode($_FILES['Filedata']['name']);
+	// $name = $_FILES['Filedata']['name'];
+	$today = date("Y-m-d");
+  $timestamp = time();
+	$box = explode(".",$_FILES['Filedata']['name']);
+	$whak = $box[1];
+
+	$name = $today."_".$timestamp.".".$whak;
+	// $new_path = "../upload/".urlencode($_FILES['Filedata']['name']);
+	$new_path = "../upload/".urlencode($name);
 	@move_uploaded_file($tmp_name, $new_path);
 	$url .= "&bNewLine=true";
 	$url .= "&sFileName=".urlencode(urlencode($name));

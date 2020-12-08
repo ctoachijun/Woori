@@ -23,7 +23,6 @@ if($pw!=$pass){
 
 ?>
 
-
 <!--
 <!doctype html>
 <html>

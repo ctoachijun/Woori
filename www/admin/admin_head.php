@@ -22,6 +22,8 @@ if($ac_type==1){
   $active_quo = "active";
 }else if($ac_type==5){
   $active_msg = "active";
+}else if($ac_type==6){
+  $active_post = "active";
 }
 
 
@@ -122,7 +124,11 @@ if($ac_type==1){
                     </div>
                 </div>
             </li>
-
+            <li class="nav-item <?=$active_post?>">
+                <a class="nav-link" href="admin_news.php">
+                    <i class="fas fa-fw fa-newspaper"></i>
+                    <span>업계소식 관리</span></a>
+            </li>
 
             <hr class="sidebar-divider">
 

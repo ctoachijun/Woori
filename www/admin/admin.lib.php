@@ -115,24 +115,38 @@ function getMsgList($type,$cur_page,$mb_id,$end,$stxt,$target){
     $start = $cur_page * $end - $end;
   }
 // echo "start : $start <br>";
-  if($type==A){
-    $type_wh = 1;
-  }else{
+
+  if($target=="CN"){
+    $target_wh = " && t2.comp_name LIKE '%{$stxt}%'";
+  }else if($target=="MN"){
+    $target_wh = " && t2.manager LIKE '%{$stxt}%'";
+  }else if($target=="MS"){
+    $target_wh = " && t1.msg LIKE '%{$stxt}%'";
+  }
+
+  $type_wh = 1;
+  $tbl_name = "w_msg";
+  $ctbl_name = "w_customer";
+  if($type=="A"){
+    $tbl_name = "w_msg_admin";
+  }else if($type=="S"){
+    $type_wh = "mb_type='{$type}'";
+    $ctbl_name = "w_supplier";
+
+  }else if($type=="C"){
     $type_wh = "mb_type='{$type}'";
   }
 
-  if($target=="CN"){
-    $target_wh = " && comp_name LIKE '%{$stxt}%'";
-  }else if($target=="MN"){
-    $target_wh = " && manager LIKE '%{$stxt}%'";
-  }else if($target=="MS"){
-    $target_wh = " && msg LIKE '%{$stxt}%'";
+  // 검색이 설정되어있으면 JOIN, 아니면 그냥.
+  if($target=="AA"){
+    $join_tbl = $tbl_name;
+  }else{
+    $join_tbl = $tbl_name." AS t1 INNER JOIN ".$ctbl_name." AS t2 ON t1.mb_idx = t2.idx";
+    $type_wh = "t2.".$type_wh;
   }
-
-
   $where_txt = $type_wh.$target_wh;
 
-  $sql = "SELECT * FROM w_msg WHERE {$where_txt} && del='N' ORDER BY w_date DESC LIMIT {$start},{$end}";
+  $sql = "SELECT * FROM {$join_tbl} WHERE {$where_txt} && del='N' ORDER BY w_date DESC LIMIT {$start},{$end}";
   // echo $sql;
   $re = sql_query($sql);
 
@@ -151,7 +165,7 @@ function getMsgList($type,$cur_page,$mb_id,$end,$stxt,$target){
     $comp_name = $info['comp_name'];
     $manager = $info['manager'];
     $w_date = $rs['w_date'];
-    $msg = $rs['msg'];
+    $msg = mb_strimwidth($rs['msg'],0,110,'...','utf-8');
 
 
     echo "<tr>";
@@ -160,24 +174,21 @@ function getMsgList($type,$cur_page,$mb_id,$end,$stxt,$target){
     echo "<td class='cont_type'>{$type_txt}</td>";
     echo "<td class='cont_date'>{$w_date}</td>";
     echo "<td class='cont_msg'><a onclick='show_rep({$idx})'>{$msg}</a></td>";
-    echo "<td class='cont_btn'><button class='form-control btn-danger' onclick='del_msg({$idx})'>삭제</button></td>";
+    echo "<td class='cont_btn'><button class='form-control btn-danger' onclick='del_msg({$idx},\"{$target}\")'>삭제</button></td>";
     echo "</tr>";
   }
   echo "<tr>";
   echo "<td colspan='6'>";
-  getPaging("w_msg",$cur_page,$mb_id,$end,$where_txt,$type);
+  getPaging($tbl_name,$cur_page,$mb_id,$end,$where_txt,$type);
   echo "</td>";
   echo "</tr>";
 
 }
 
-function getPaging($table,$cur_page,$mb_id,$end,$where_txt,$type){
-  if($table == "w_msg"){
-  }else if($table == "d_class"){
-  }else if($table == "d_log_info"){
-  }
 
+function getPaging($table,$cur_page,$mb_id,$end,$where_txt,$type){
   // echo "cur : $cur_page <br>";
+  // echo "end : $end <br>";
 
   $sql = "SELECT * FROM {$table} WHERE {$where_txt} && del='N'";
   // echo $sql;
@@ -191,7 +202,7 @@ function getPaging($table,$cur_page,$mb_id,$end,$where_txt,$type){
     ++$total_page;
   }
 
-  $block_limit = 2; // 한 화면에 뿌려질 블럭 개수
+  $block_limit = 10; // 한 화면에 뿌려질 블럭 개수
   $total_block = ceil($total_page / $block_limit);  // 전체 블록수
   $cur_page = $cur_page ? $cur_page : 1;  // 현재 페이지
   $cur_block = ceil($cur_page / $block_limit); // 현재블럭 : 화면에 표시 될 페이지 리스트
@@ -208,7 +219,7 @@ function getPaging($table,$cur_page,$mb_id,$end,$where_txt,$type){
   // 페이징 준비 끝
 
 
-  $sql = "SELECT * FROM {$table} WHERE {$where} && del='N' ORDER BY w_date DESC LIMIT {$first_page},{$end_page}";
+  $sql = "SELECT * FROM {$table} WHERE {$where_txt} && del='N' ORDER BY w_date DESC LIMIT {$first_page},{$end_page}";
   // echo $sql;
   $total_cnt = sql_num_rows($sql);
 
@@ -293,34 +304,68 @@ function getPaging($table,$cur_page,$mb_id,$end,$where_txt,$type){
 }
 
 
-function getMsgContent($idx){
-  $sql = "SELECT * FROM w_msg WHERE idx={$idx}";
+function getPosting($cur_page,$end,$num){
+  if($cur_page==1){
+    $start=0;
+    $cnt = 1;
+  }else{
+    $start = $cur_page * $end - $end;
+    $cnt = $cur_page * $end - ($end-1);
+  }
+
+  $sql = "SELECT * FROM w_posting WHERE del='N' ORDER BY w_date DESC LIMIT {$start},{$end}";
+  $re = sql_query($sql);
+
+
+  while($rs=sql_fetch_array($re)){
+    $idx = $rs['idx'];
+    $title = $rs['title'];
+
+    // html 코드로 변환 후 이미지 안나오게, 최대한 한줄에 많이보이게 처리. (한계가 있.. ㅠㅠ)
+    $box = htmlspecialchars_decode($rs['content']);
+    $box2 = strpos($box,"<p>");
+    $content_box = str_replace("<p>"," ",$box);
+    $content_box = str_replace("</p>"," ",$content_box);
+    $content_box = str_replace("<img"," ",$content_box);
+    $content = mb_strimwidth($content_box,0,55,'...','utf-8');
+
+
+    $wbox = explode(" ",$rs['w_date']);
+    $w_date = $wbox[0];
+
+    echo "
+    <tr onmouseover='chg_back(this)' onmouseout='remove_back(this)'>
+      <td class='cont_no'>{$cnt}</td>
+      <td class='cont_title'>{$title}</td>
+      <td class='cont_content'>{$content}</td>
+      <td class='cont_date'>{$w_date}</td>
+      <td class='cont_btn'>
+        <button class='btn btn-secondary editbtn' onclick='edit_posting({$idx})'>수정</button>
+        <button class='btn btn-danger delbtn' onclick='del_posting({$idx})'>삭제</button>
+      </td>
+    </tr>
+
+    ";
+    $cnt++;
+  }
+
+  echo "<tr>";
+  echo "<td colspan='5'>";
+  getPaging("w_posting",$cur_page,$mb_id,$end,1,$type);
+  echo "</td>";
+  echo "</tr>";
+
+}
+
+
+function getPostingInfo($idx){
+  $sql = "SELECT * FROM w_posting WHERE idx={$idx}";
   $re = sql_fetch($sql);
 
+  return $re;
 }
 
 
-function getMsgLeftList(){
-  echo "
-  <div class='cont_block'>
-    <div class='p_img'>
-      <img src='../img/profile/test.png' />
-    </div>
-    <div class='text'>
-      <table>
-        <tr>
-          <td class='td_name'>개똥이</td>
-          <td class='td_read'>안읽음</td>
-          <td class='td_date'>20.12.07</td>
-        </tr>
-        <tr>
-          <td colspan='3' class='td_msg'><? echo mb_strimwidth('도대체 이건 어떻게 된건지 알수도 없겠지만 그래도 알수도 없는걸 알게 해주는게 그런게 업체의 그 알수없는 그런 로직으로 알수있게 해주는게 아닌건 아닌지 알수가 없네요.',0,70,'...','utf-8'); ?></td>
-        </tr>
-      </table>
-    </div>
-  </div>
-  ";
-}
 
 
 

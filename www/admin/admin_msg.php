@@ -2,7 +2,7 @@
 include "./admin_head.php";
 
 if(!$type){
-  $type = "A";
+  $type = "T";
 }
 $type_sel_txt = "type_sel".$type;
 $$type_sel_txt = "selected";
@@ -20,7 +20,7 @@ if(!$cur_page){
   $cur_page = 1;
 }
 if(!$end){
-  $end = 4;
+  $end = 10;
 }
 if(!$ref){
   $ref = 1;
@@ -35,8 +35,8 @@ $self = $PHP_SELF;
 
 <div id="msg">
   <div class="container-fluid">
-    <h1 class="h3 mb-2 text-gray-800">메세지</h1>
-    <p class="mb-4">각 회원들과 주고받은 메세지를 확인하고, 전송이 가능합니다.</p>
+    <h1 class="h3 mb-2 text-gray-800">메세지 확인 / 답장</h1>
+    <p class="mb-4">각 회원들과 주고받은 메세지를 확인하고, 답장 전송이 가능합니다.</p>
 
     <div class="card shadow mb-4">
       <form method="POST" name="search" action="<?=$url?>">
@@ -57,9 +57,10 @@ $self = $PHP_SELF;
         </div>
         <div class="search_right">
           <select id="msg_type" name="type" class="form-control sel" onchange="sort_type('<?=$self?>')">
-            <option value="A" <?=$type_selA?>>전체</option>
+            <option value="T" <?=$type_selT?>>전체</option>
             <option value="C" <?=$type_selC?>>Customer</option>
             <option value="S" <?=$type_selS?>>Supplier</option>
+            <option value="A" <?=$type_selA?>>Admin</option>
           </select>
         </div>
       </div>
@@ -71,7 +72,7 @@ $self = $PHP_SELF;
                   <thead>
                       <tr>
                           <th>회사명</th>
-                          <th>이름</th>
+                          <th>담당자</th>
                           <th>분류</th>
                           <th>작성일</th>
                           <th class="th_blank_r">내용</th>
@@ -90,12 +91,12 @@ $self = $PHP_SELF;
       <div class="reply_cont">
         <div class='rep_left'>
           <div class='left_head'>
-            <select class='form-control read_sel' id='msg_read'>
+            <select class='form-control read_sel' id='msg_read' onchange='ru_rep()'>
               <option value='0'>전체메세지</option>
               <option value='2'>읽음</option>
               <option value='1'>안읽음</option>
             </select>
-            <input type='text' id='msg_stxt' class='rep_stxt' name='rep_stxt' />
+            <input type='text' id='msg_stxt' class='rep_stxt' name='rep_stxt'  placeholder="검색어 입력"/>
             <i class='fas fa-search btni' onclick="search_rep()"></i>
           </div>
           <div class='left_cont' id="left_list">
@@ -108,7 +109,7 @@ $self = $PHP_SELF;
           </div>
           <div class='right_cont'>
             <div class='right_top'>
-              <span class='text_bolder'>보낸 사람 : <input type="text" class="sender" id="sender_name" value="dkjfld" readonly/></span>
+              <span class='text_bolder'>보낸 사람 : <input type="text" class="sender" id="sender_name" value="" readonly/></span>
               <div class='msg_cont'>
                 <textarea class='form-cntrol msg' id='msg_cs' readonly><?=$msg?></textarea>
               </div>
@@ -120,9 +121,10 @@ $self = $PHP_SELF;
               </div>
             </div>
           </div>
-          <div class="submit_btn">
+          <div class="submit_btn" id="submit_btn">
             <input type="hidden" name="msg_idx" />
-            <input type="button" class="btn btn-secondary" value="전송" onclick="send_reply()"/>
+            <input type="hidden" name="ru" />
+            <input type="button" class="btn btn-secondary" value="전송" onclick="send_reply()" />
           </div>
         </div>
       </div>

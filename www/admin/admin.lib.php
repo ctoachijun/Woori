@@ -179,16 +179,17 @@ function getMsgList($type,$cur_page,$mb_id,$end,$stxt,$target){
   }
   echo "<tr>";
   echo "<td colspan='6'>";
-  getPaging($tbl_name,$cur_page,$mb_id,$end,$where_txt,$type);
+  getPaging($tbl_name,$cur_page,$mb_id,$end,$where_txt,$type,$cate);
   echo "</td>";
   echo "</tr>";
 
 }
 
 
-function getPaging($table,$cur_page,$mb_id,$end,$where_txt,$type){
-  // echo "cur : $cur_page <br>";
-  // echo "end : $end <br>";
+function getPaging($table,$cur_page,$mb_id,$end,$where_txt,$type,$cate){
+    // echo "cur : $cur_page <br>";
+    // echo "end : $end <br>";
+
 
   $sql = "SELECT * FROM {$table} WHERE {$where_txt} && del='N'";
   // echo $sql;
@@ -257,8 +258,8 @@ function getPaging($table,$cur_page,$mb_id,$end,$where_txt,$type){
 
 
   $cur_path = $_SERVER['SCRIPT_NAME'];
-  $prev_url = $cur_path."?table={$table}&cur_page={$pre_block}&start={$prev_start}&end={$page_rows}&type={$type}";
-  $next_url = $cur_path."?table={$table}&cur_page={$next_block}&start={$next_start}&end={$page_rows}&type={$type}";
+  $prev_url = $cur_path."?table={$table}&cur_page={$pre_block}&start={$prev_start}&end={$page_rows}&type={$type}&cate={$cate}";
+  $next_url = $cur_path."?table={$table}&cur_page={$next_block}&start={$next_start}&end={$page_rows}&type={$type}&cate={$cate}";
 
 
   // 이전, 다음버튼 제어 처리
@@ -293,7 +294,7 @@ function getPaging($table,$cur_page,$mb_id,$end,$where_txt,$type){
       $cont = "<a>{$i}</a>";
     }else{
       $act = " ";
-      $cur_url = $cur_path."?table={$table}&cur_page={$i}&end={$page_rows}&type={$type}";
+      $cur_url = $cur_path."?table={$table}&cur_page={$i}&end={$page_rows}&type={$type}&cate={$cate}";
       $cont = "<a href='{$cur_url}'>{$i}</a>";
     }
     echo "<li class='{$act}'>{$cont}</li>";
@@ -351,12 +352,11 @@ function getPosting($cur_page,$end,$num){
 
   echo "<tr>";
   echo "<td colspan='5'>";
-  getPaging("w_posting",$cur_page,$mb_id,$end,1,$type);
+  getPaging("w_posting",$cur_page,$mb_id,$end,1,$type,$cate);
   echo "</td>";
   echo "</tr>";
 
 }
-
 
 function getPostingInfo($idx){
   $sql = "SELECT * FROM w_posting WHERE idx={$idx}";
@@ -366,6 +366,71 @@ function getPostingInfo($idx){
 }
 
 
+function getItemList($cur_page,$end,$cate){
+  if($cur_page==1){
+    $start=0;
+    $cnt = 1;
+  }else{
+    $start = $cur_page * $end - $end;
+    $cnt = $cur_page * $end - ($end-1);
+  }
+  $where_txt = "category={$cate}";
+
+  $sql = "SELECT * FROM w_item WHERE del='N' && category={$cate} ORDER BY w_date DESC LIMIT {$start},{$end}";
+  // echo $sql;
+  $re = sql_query($sql);
+
+  $img_src = "../img/items/";
+
+  while($rs=sql_fetch_array($re)){
+    $idx = $rs["idx"];
+    $name = $rs["name"];
+    $img = $rs["img"];
+    $weight = $rs["weight"];
+    $dnum = $rs["drawing_num"];
+    $wbox = explode(" ",$rs["w_date"]);
+    $w_date = $wbox[0];
+
+    echo "
+    <tr onmouseover='chg_back(this)' onmouseout='remove_back(this)'>
+      <td class='cont_no'>{$cnt}</td>
+      <td class='cont_name'>{$name}</td>
+      <td class='cont_weight'>{$weight} KG</td>
+      <td class='cont_dnum'>{$dnum}</td>
+      <td class='cont_img'><a href='{$img_src}{$img}' target='_blank'>{$img}</a></td>
+      <td class='cont_date'>{$w_date}</td>
+      <td class='cont_btn'>
+        <button class='btn btn-secondary editbtn' onclick='edit_item({$idx})'>수정</button>
+        <button class='btn btn-danger delbtn' onclick='del_item({$idx})'>삭제</button>
+      </td>
+    </tr>
+    ";
+    $cnt++;
+  }
+  echo "
+  <tr>
+    <td colspan='7'>";
+    getPaging("w_item",$cur_page,$mb_id,$end,$where_txt,$type,$cate);
+  echo "
+    </td>
+  </tr>
+  ";
+
+}
+
+function getItemSupply($cate){
+  $sql = "SELECT * FROM w_item_supply WHERE category={$cate}";
+  $re = sql_fetch($sql);
+
+  return $re;
+}
+
+function getItemInfo($idx,$cate){
+  $sql = "SELECT * FROM w_item WHERE idx={$idx} && category={$cate}";
+  $re = sql_fetch($sql);
+
+  return $re;
+}
 
 
 

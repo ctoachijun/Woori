@@ -1,3 +1,21 @@
+// 숫자만 입력가능
+function onlyNum(obj){
+  let val1;
+  val1 = obj.value;
+  obj.value = val1.replace(/[^0-9,.]/g,"");
+}
+// 세자리마다 , 처리
+function addComma(value){
+    value = String(value);
+    value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return value;
+ }
+// 세자리 , 삭제
+function removeComma(str){
+	let n = parseInt(str.replace(/,/g,""));
+	return n;
+}
+
 function chkLogin(){
   let id = $("#id").val().trim();
   let pw = $("#password").val().trim();
@@ -264,4 +282,135 @@ function del_posting(idx){
       }
     });
   }
+}
+
+function edit_item(idx){
+  $("input[name=idx]").val(idx);
+  $("input[name=type]").val("E");
+  $("FORM").submit();
+}
+
+function del_item(idx){
+  let cate = $("input[name=cate]").val();
+  let box = {"w_type":"del_item", "idx":idx, "cate":cate};
+  if(confirm("삭제하시겠습니까?")){
+    $.ajax({
+      url: "ajax.admin.php",
+      type: "post",
+      contentType:'application/x-www-form-urlencoded;charset=UTF8',
+      data: box
+    }).done(function(data){
+      let json = JSON.parse(data);
+      console.log(json.sql);
+      if(json.state=="Y"){
+        alert("삭제 했습니다.");
+        history.go(0);
+      }else{
+        alert("삭제에 실패 했습니다.");
+      }
+    });
+  }
+}
+
+
+function proc_we(){
+  let name = $("#iname").val().trim();
+  let weight = $("#iweight").val().trim();
+  let draw_num = $("#idraw").val().trim();
+
+  if(!name){
+    alert("제품명을 입력 해 주세요.");
+    $("#iname").focus();
+    return false;
+  }
+  if(!weight){
+    alert("단중을 입력 해 주세요.");
+    $("#iweight").focus();
+    return false;
+  }
+  if(!draw_num){
+    alert("도면번호를 입력 해 주세요.");
+    $("#idraw").focus();
+    return false;
+  }
+
+  let box = $("#item_datas")[0];
+  let box1 = new FormData(box);
+  // box1.append("img1",$("#pic1")[0].files[0]);
+
+  $.ajax({
+    url: "ajax.admin.php",
+    type: "post",
+    // contentType:'application/x-www-form-urlencoded;charset=UTF8',
+    contentType: false,
+    processData: false,
+    data: box1
+  }).done(function(data){
+    let json = JSON.parse(data);
+    console.log(json.sql);
+    if(json.state=="Y"){
+      alert("등록 했습니다.");
+      history.go(0);
+    }else if(json.state=="FN"){
+      alert("파일 업로드에 실패 했습니다.");
+    }else{
+      alert("등록에 실패 했습니다.");
+    }
+  });
+
+}
+
+function supply_comp(){
+  let cate = $("input[name=category]").val();
+  let name = new Array();
+  let weight = new Array();
+  let ntxt = "comp_name";
+  let wtxt = "weight";
+
+  for(let i=1; i<7; i++){
+    name[i] = $("input[name=comp_name"+i+"]").val();
+    weight[i] = $("input[name=weight"+i+"]").val();
+  }
+
+  let box = {"w_type":"edit_supply","category":cate,"cnames":name,"weights":weight};
+  if(confirm("우선공급자 정보를 변경하시겠습니까?")){
+    $.ajax({
+      url: "ajax.admin.php",
+      type: "post",
+      contentType:'application/x-www-form-urlencoded;charset=UTF8',
+      data: box
+    }).done(function(data){
+      let json = JSON.parse(data);
+      // console.log(json.sql);
+      if(json.state=="Y"){
+        alert("변경 했습니다.");
+      }else{
+        alert("변경에 실패 했습니다.");
+      }
+    });
+  }
+}
+
+
+
+function view_pic1(e){
+  let files = e.target.files;
+  let filesArr = Array.prototype.slice.call(files);
+
+  filesArr.forEach(function(f){
+    if(!f.type.match("image.*")){
+      alert("이미지파일을 선택 해 주세요.");
+      return;
+    }
+
+    sel_file = f;
+    let reader = new FileReader();
+    reader.onload = function(e){
+      $(".file_custom1").css({"background": "url("+e.target.result+")"});
+      $(".file_custom1").css({"background-repeat": "no-repeat"});
+      $(".file_custom1").css({"background-size": "contain"});
+    }
+    reader.readAsDataURL(f);
+
+  });
 }

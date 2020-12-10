@@ -93,20 +93,20 @@ if($ac_type==1){
                 <div id="collapseItems" class="collapse" aria-labelledby="headingUtilities"
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="">주조품</a>
-                        <a class="collapse-item" href="">단조품</a>
-                        <a class="collapse-item" href="">제관품</a>
-                        <a class="collapse-item" href="">조립품</a>
+                        <a class="collapse-item" href="admin_item.php?cate=1">주조품</a>
+                        <a class="collapse-item" href="admin_item.php?cate=2">단조품</a>
+                        <a class="collapse-item" href="admin_item.php?cate=3">제관품</a>
+                        <a class="collapse-item" href="admin_item.php?cate=4">조립품</a>
                     </div>
                 </div>
             </li>
             <li class="nav-item <?=$active_rfq?>">
-                <a class="nav-link" href="">
+                <a class="nav-link" href="admin_rfq.php">
                     <i class="fas fa-fw fa-file"></i>
                     <span>RFQ 관리</span></a>
             </li>
             <li class="nav-item <?=$active_quo?>">
-                <a class="nav-link" href="">
+                <a class="nav-link" href="admin_quo.php">
                     <i class="fas fa-fw fa-file-alt"></i>
                     <span>Quotation 관리</span></a>
             </li>

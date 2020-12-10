@@ -219,6 +219,124 @@ switch($w_type){
     echo json_encode($output,JSON_UNESCAPED_UNICODE);
   break;
 
+  case "insert_item" :
+    // 파일 업로드
+    $file1 = $_FILES['pic1'];
+    $f1_err = $file1['error'];
+    $f1_tmp = $file1['tmp_name'];
+    $f1_name = $file1['name'];
+
+    $upload_path = "/www/img/items";
+    $utime1 = strtotime("Now");
+
+    $img_src = "../img/items/";
+    $box1 = explode('.',$f1_name);
+    $f1_whak = end($box1);
+
+    if($f1_tmp){
+      $f1_name = $utime1.".".$f1_whak;
+      if($f1_err != 4){
+        if($f1_err == 1){
+          $return_txt = "업로드에 실패했습니다.";
+        }else{
+          $re1 = move_uploaded_file($f1_tmp, $img_src.$f1_name);
+        }
+      }
+    }
+
+    if($re1){
+      $sql = "INSERT INTO w_item SET name='{$name}', weight='{$weight}', drawing_num='{$draw_num}', w_date=DEFAULT, img='{$f1_name}', category={$category}";
+      $re = sql_query($sql);
+
+      if($re){
+        $output["state"] = "Y";
+      }else{
+        $output["state"] = "N";
+      }
+    }else{
+      $output["state"] = "FN";
+    }
+    echo json_encode($output,JSON_UNESCAPED_UNICODE);
+  break;
+
+  case "edit_item" :
+
+    $file1 = $_FILES['pic1'];
+    if($file1){
+      $f1_err = $file1['error'];
+      $f1_tmp = $file1['tmp_name'];
+      $f1_name = $file1['name'];
+
+      $upload_path = "/www/img/items";
+      $utime1 = strtotime("Now");
+
+      $img_src = "../img/items/";
+      $box1 = explode('.',$f1_name);
+      $f1_whak = end($box1);
+
+      if($f1_tmp){
+        $f1_name = $utime1.".".$f1_whak;
+        if($f1_err != 4){
+          if($f1_err == 1){
+            $return_txt = "업로드에 실패했습니다.";
+          }else{
+            $re1 = move_uploaded_file($f1_tmp, $img_src.$f1_name);
+          }
+        }
+      }
+    }
+
+    // 새로 업로드하는 파일이 있으면 f1_name 값이 들어있다.
+    if($f1_name){
+      $img_txt = ", img = '{$f1_name}'";
+    }
+    $sql = "UPDATE w_item SET name='{$name}', weight='{$weight}', drawing_num='{$draw_num}', category={$category} {$img_txt} WHERE idx={$idx}";
+    $re = sql_query($sql);
+    $output['sql'] = $sql;
+    if($re){
+      $output["state"] = "Y";
+    }else{
+      $output["state"] = "N";
+    }
+    echo json_encode($output,JSON_UNESCAPED_UNICODE);
+  break;
+
+  case "del_item" :
+    $sql = "UPDATE w_item SET del='Y' WHERE idx={$idx} && category={$cate}";
+    $re = sql_query($sql);
+
+    if($re){
+      $output["state"] = "Y";
+    }else{
+      $output["state"] = "N";
+    }
+    echo json_encode($output,JSON_UNESCAPED_UNICODE);
+  break;
+
+  case "edit_supply" :
+    for($i=1; $i<7; $i++){
+      if($i==6){
+        $cname_txt .= "comp_name$i = '".$cnames[$i]."'";
+        $weight_txt .= "weight$i = '".$weights[$i]."'";
+      }else{
+        $cname_txt .= "comp_name$i = '".$cnames[$i]."',";
+        $weight_txt .= "weight$i = '".$weights[$i]."',";
+      }
+    }
+
+    $sql = "UPDATE w_item_supply SET {$cname_txt} , {$weight_txt} WHERE category={$category}";
+    $re = sql_query($sql);
+
+    if($re){
+      $output['state'] = "Y";
+    }else{
+      $output['state'] = "N";
+    }
+
+    echo json_encode($output,JSON_UNESCAPED_UNICODE);
+  break;
+
+
 
 }
 
